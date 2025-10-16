@@ -1,8 +1,7 @@
 "use client";
 
 import { Calendar, Home, Inbox, Search, Settings } from "lucide-react";
-import { useState } from "react";
-import React from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { NavUser } from "../ui/nav-user";
 import { LoginForm } from "@/components/login-form";
 import { toast, Toaster } from "sonner";
@@ -24,7 +23,7 @@ import { SignupForm } from "@/components/signup-form";
 interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
-  children: React.ReactNode;
+  children: ReactNode;
 }
 
 interface ContentProps {
@@ -78,11 +77,11 @@ const items = [
 export function AppSidebar() {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isSignupModalOpen, setIsSignupModalOpen] = useState(false);
+  const [shouldAnnounceLoginClose, setShouldAnnounceLoginClose] =
+    useState(false);
   const closeLoginModal = () => {
     setIsLoginModalOpen(false);
-    toast.info("Login modal closed.", {
-      description: "Modalul de logare a fost închis.",
-    });
+    setShouldAnnounceLoginClose(true);
   };
   const closeSignupModal = () => {
     setIsSignupModalOpen(false);
@@ -103,6 +102,17 @@ export function AppSidebar() {
     setIsSignupModalOpen(false);
     setIsLoginModalOpen(true);
   };
+
+  useEffect(() => {
+    if (!shouldAnnounceLoginClose) {
+      return;
+    }
+
+    toast.info("Login modal closed.", {
+      description: "Modalul de logare a fost închis.",
+    });
+    setShouldAnnounceLoginClose(false);
+  }, [shouldAnnounceLoginClose]);
 
   return (
     <>
@@ -149,6 +159,7 @@ export function AppSidebar() {
         />
       </AppModal>
 
+      {/* toasterul trebuie sa fie in layout */}
       <Toaster position="bottom-right" richColors />
     </>
   );

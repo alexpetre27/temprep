@@ -34,7 +34,7 @@ import { ro } from "date-fns/locale";
 interface FormData {
   title: string;
   amount: number;
-  categoryId: string;
+  category: string;
   date: Date | undefined;
   note?: string;
   type: string;
@@ -54,7 +54,7 @@ export function AddTransactionDialog({
     const formattedData = {
       title: data.title,
       amount: data.amount,
-      categoryId: data.categoryId,
+      category: data.category,
       date: data.date ? data.date.toISOString() : new Date().toISOString(),
       type: data.type.toUpperCase(),
       note: data.note || null,
@@ -118,7 +118,7 @@ export function AddTransactionDialog({
     const data: FormData = {
       title: formTitle,
       amount: parseFloat(formAmount),
-      categoryId: formCategory,
+      category: formCategory,
       date,
       type: formType,
       note: formNote,

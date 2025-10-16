@@ -24,19 +24,18 @@ model User {
 model Category {
   id            Int           @id @default(autoincrement())
   name          String
-  transactions Transaction[]
+  // transactions Transaction[]
 }
 
 model Transaction {
+  id            Int           @id @default(autoincrement())
   title         String
   amount        Float
-  type          TransactionType // Devine obligatoriu (nu are '?')
+  type          TransactionType
   date          DateTime      @default(now())
-  categoryId    Int
+  category      String
+  
   note          String?
-  id            Int           @id @default(autoincrement())
-
-  userId        Int? // Păstrat opțional, dar vezi nota de mai jos
-  category      Category @relation(fields: [categoryId], references: [id])
+  userId        Int? 
   user          User?    @relation(fields: [userId], references: [id])
 }
