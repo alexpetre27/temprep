@@ -1,0 +1,42 @@
+// Definirea tipului ENUM pentru a asigura date curate (INCOME/EXPENSE)
+enum TransactionType {
+  INCOME
+  EXPENSE
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  name          String
+  image         String?
+  createdAt     DateTime      @default(now())
+  id            Int           @id @default(autoincrement())
+  transactions Transaction[]
+}
+
+model Category {
+  id            Int           @id @default(autoincrement())
+  name          String
+  transactions Transaction[]
+}
+
+model Transaction {
+  title         String
+  amount        Float
+  type          TransactionType // Devine obligatoriu (nu are '?')
+  date          DateTime      @default(now())
+  categoryId    Int
+  note          String?
+  id            Int           @id @default(autoincrement())
+
+  userId        Int? // Păstrat opțional, dar vezi nota de mai jos
+  category      Category @relation(fields: [categoryId], references: [id])
+  user          User?    @relation(fields: [userId], references: [id])
+}
