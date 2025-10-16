@@ -29,49 +29,116 @@ import {
 } from "@/components/ui/popover";
 import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
+import { ro } from "date-fns/locale";
+
+interface FormData {
+  title: string;
+  amount: number;
+  categoryId: string;
+  date: Date | undefined;
+  note?: string;
+  type: string;
+}
 
 export function AddTransactionDialog({
   onAdd,
 }: {
+  // onAdd primește datele NOI returnate de server
   onAdd?: (data: any) => void;
 }) {
   const [date, setDate] = useState<Date | undefined>(new Date());
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+  // 🚨 LOGICA RESTABILITĂ: Salvarea către API
+  const handleSaveToApi = async (data: FormData) => {
+    const formattedData = {
+      title: data.title,
+      amount: data.amount,
+      categoryId: data.categoryId,
+      date: data.date ? data.date.toISOString() : new Date().toISOString(),
+      type: data.type.toUpperCase(),
+      note: data.note || null,
+    };
+
+    try {
+      const response = await fetch("/api/transactions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formattedData),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Salvarea tranzacției a eșuat!");
+      }
+
+      // Preia tranzacția salvată (cu ID, categorie completă, etc.)
+      const savedTransaction = await response.json();
+
+      if (onAdd) {
+        // Trimite tranzacția COMPLETA înapoi la mainpage.tsx
+        onAdd(savedTransaction);
+      }
+      setIsDialogOpen(false);
+    } catch (error) {
+      console.error("Eroare la salvare:", error);
+      alert(
+        `Eroare la adăugarea tranzacției: ${
+          error instanceof Error ? error.message : String(error)
+        }`
+      );
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
-    const data = {
-      title: formData.get("title"),
-      amount: parseFloat(formData.get("amount") as string),
-      category: formData.get("category"),
-      type: formData.get("type"),
+
+    const formTitle = formData.get("title") as string;
+    const formAmount = formData.get("amount") as string;
+    const formCategory = formData.get("category") as string;
+    const formType = formData.get("type") as string;
+    const formNote = formData.get("note") as string | undefined;
+
+    if (
+      !formTitle ||
+      !formAmount ||
+      !formCategory ||
+      !formType ||
+      isNaN(parseFloat(formAmount))
+    ) {
+      alert(
+        "Vă rugăm completați toate câmpurile obligatorii (Titlu, Sumă, Categorie, Tip)."
+      );
+      return;
+    }
+
+    const data: FormData = {
+      title: formTitle,
+      amount: parseFloat(formAmount),
+      categoryId: formCategory,
       date,
+      type: formType,
+      note: formNote,
     };
-    if (onAdd) onAdd(data);
-    e.currentTarget.reset();
+    handleSaveToApi(data);
   };
 
   return (
-    <Dialog>
+    <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
       <DialogTrigger asChild>
         <Button variant="outline" className="w-auto sm:w-[150px]">
           Add Transaction
         </Button>
       </DialogTrigger>
-
       <DialogContent
         className="
-                  fixed 
-                  top-1/2 left-[55%] 
-                  -translate-x-1/2 -translate-y-1/2
-                  sm:max-w-[425px]
-                  w-[90%] sm:w-auto
-                  bg-background
-                  rounded-lg
-                  border
-                  shadow-xl
-                  p-6
-                "
+          fixed top-1/2 left-[55%] -translate-x-1/2 -translate-y-1/2
+          sm:max-w-[425px] w-[90%] sm:w-auto bg-background
+          rounded-lg border shadow-xl p-6
+        "
       >
         <DialogHeader>
           <DialogTitle>Add New Transaction</DialogTitle>
@@ -100,7 +167,6 @@ export function AddTransactionDialog({
               placeholder="e.g. 120.50"
               min="0"
               inputMode="decimal"
-              pattern="[0-9]*"
               required
             />
           </div>
@@ -111,12 +177,12 @@ export function AddTransactionDialog({
                 <SelectValue placeholder="Select category" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="food">Food</SelectItem>
-                <SelectItem value="transport">Transport</SelectItem>
-                <SelectItem value="bills">Bills</SelectItem>
-                <SelectItem value="entertainment">Entertainment</SelectItem>
-                <SelectItem value="salary">Salary</SelectItem>
-                <SelectItem value="other">Other</SelectItem>
+                <SelectItem value="1">Food</SelectItem>
+                <SelectItem value="2">Transport</SelectItem>
+                <SelectItem value="3">Bills</SelectItem>
+                <SelectItem value="4">Entertainment</SelectItem>
+                <SelectItem value="5">Salary</SelectItem>
+                <SelectItem value="6">Other</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -141,7 +207,11 @@ export function AddTransactionDialog({
                   className="justify-start text-left font-normal"
                 >
                   <CalendarIcon className="mr-2 h-4 w-4" />
-                  {date ? format(date, "PPP") : <span>Pick a date</span>}
+                  {date ? (
+                    format(date, "PPP", { locale: ro })
+                  ) : (
+                    <span>Alege o dată</span>
+                  )}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="start">
@@ -155,9 +225,16 @@ export function AddTransactionDialog({
             </Popover>
           </div>
 
+          <div className="grid gap-2">
+            <Label htmlFor="note">Note (Optional)</Label>
+            <Input id="note" name="note" placeholder="e.g. Cash payment" />
+          </div>
+
           <DialogFooter>
             <DialogClose asChild>
-              <Button variant="outline">Cancel</Button>
+              <Button type="button" variant="outline">
+                Cancel
+              </Button>
             </DialogClose>
             <Button type="submit">Save</Button>
           </DialogFooter>

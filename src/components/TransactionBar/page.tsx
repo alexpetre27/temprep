@@ -1,6 +1,7 @@
 "use client";
 
 import { CategorySearch } from "@/components/ui/CategorySearch";
+import TransactionList from "@/components/ui/TransactionList";
 import { useState } from "react";
 
 export default function TransactionSearchBar() {
@@ -19,9 +20,11 @@ export default function TransactionSearchBar() {
       <div className="mt-8 p-4 border rounded-md">
         <p>Rezultate afișate pentru:</p>
         <p className="font-medium mt-1">
-          Căutare:"{currentQuery}" |Filtru:{currentCategory}
+          Căutare: "{currentQuery}" | Filtru: {currentCategory}
         </p>
       </div>
+
+      <TransactionList />
     </div>
   );
 }

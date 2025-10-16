@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { TrendingUp } from "lucide-react";
-import { Pie, PieChart, Cell, Sector, PieActiveShapeProps } from "recharts";
+import { Pie, PieChart, Cell, Sector } from "recharts";
 
 import {
   Card,
@@ -15,37 +15,49 @@ import {
 
 import { ChartContainer, ChartConfig, ChartTotal } from "@/components/ui/chart";
 
-const chartData = [
-  { browser: "Chrome", visitors: 275 },
-  { browser: "Safari", visitors: 200 },
-  { browser: "Firefox", visitors: 187 },
-  { browser: "Edge", visitors: 173 },
-  { browser: "Other", visitors: 90 },
+interface PieChartDataItem {
+  name: string;
+  value: number;
+}
+
+interface ChartPieLabelProps {
+  data: PieChartDataItem[];
+}
+const BUDGET_CATEGORIES = [
+  "FOOD",
+  "TRANSPORT",
+  "BILLS",
+  "ENTERTAINMENT",
+  "SALARY",
+  "OTHER",
 ];
 
 const chartConfig: ChartConfig = {
-  Chrome: { label: "Chrome", color: "var(--chart-1)" },
-  Safari: { label: "Safari", color: "var(--chart-2)" },
-  Firefox: { label: "Firefox", color: "var(--chart-3)" },
-  Edge: { label: "Edge", color: "var(--chart-4)" },
-  Other: { label: "Other", color: "var(--chart-5)" },
+  FOOD: { label: "Mâncare", color: "var(--chart-1)" },
+  TRANSPORT: { label: "Transport", color: "var(--chart-2)" },
+  BILLS: { label: "Facturi", color: "var(--chart-3)" },
+  ENTERTAINMENT: { label: "Divertisment", color: "var(--chart-4)" },
+  SALARY: { label: "Salariu", color: "var(--chart-5)" },
+  OTHER: { label: "Altele", color: "var(--chart-6)" },
 };
-export function ChartPieLabel() {
+export function ChartPieLabel({ data }: ChartPieLabelProps) {
   const [hoverIndex, setHoverIndex] = useState<number | null>(null);
-
-  const totalVisitors = useMemo(
-    () => chartData.reduce((sum, item) => sum + item.visitors, 0),
-    []
+  const totalValue = useMemo(
+    () => data.reduce((sum, item) => sum + item.value, 0),
+    [data]
   );
 
-  const renderActiveShape = (props: PieActiveShapeProps) => {
-    const isHover = props.index === hoverIndex;
+  const renderActiveShape = (props: any) => {
+    const index = props.index as number;
+    const outerRadius = props.outerRadius as number;
+
+    const isHover = index === hoverIndex;
     const offset = isHover ? 8 : 0;
 
     return (
       <Sector
         {...props}
-        outerRadius={(props.outerRadius ?? 0) + offset}
+        outerRadius={outerRadius + offset}
         stroke="var(--color-foreground)"
         strokeWidth={isHover ? 3 : 1}
         style={{
@@ -60,13 +72,18 @@ export function ChartPieLabel() {
       />
     );
   };
-  const activeData = hoverIndex !== null ? chartData[hoverIndex] : null;
+
+  const activeData = hoverIndex !== null ? data[hoverIndex] : null;
+  const activeLabel = activeData
+    ? chartConfig[activeData.name as keyof typeof chartConfig]?.label ||
+      activeData.name
+    : "";
 
   return (
     <Card className="flex flex-col">
       <CardHeader className="items-center pb-0">
-        <CardTitle>Budget Tracker</CardTitle>
-        <CardDescription>January – June 2024</CardDescription>
+        <CardTitle>Total Cheltuieli pe Categorii</CardTitle>
+        <CardDescription>Vizualizare buget curent</CardDescription>
       </CardHeader>
 
       <CardContent className="flex-1 pb-0">
@@ -76,9 +93,9 @@ export function ChartPieLabel() {
         >
           <PieChart>
             <Pie
-              data={chartData}
-              dataKey="visitors"
-              nameKey="browser"
+              data={data}
+              dataKey="value"
+              nameKey="name"
               innerRadius={70}
               outerRadius={100}
               activeIndex={hoverIndex ?? undefined}
@@ -89,11 +106,11 @@ export function ChartPieLabel() {
               animationDuration={500}
               animationEasing="ease-out"
             >
-              {chartData.map((entry) => (
+              {data.map((entry) => (
                 <Cell
-                  key={entry.browser}
+                  key={entry.name}
                   fill={
-                    chartConfig[entry.browser as keyof typeof chartConfig]
+                    chartConfig[entry.name as keyof typeof chartConfig]
                       ?.color || "var(--color-foreground)"
                   }
                   style={{
@@ -112,19 +129,19 @@ export function ChartPieLabel() {
               {activeData ? (
                 <>
                   <span className="text-sm text-muted-foreground">
-                    {activeData.browser}
+                    {activeLabel}
                   </span>
                   <span className="text-2xl font-bold tabular-nums">
-                    {activeData.visitors.toLocaleString()}
+                    {activeData.value.toFixed(2)} RON
                   </span>
                 </>
               ) : (
                 <>
                   <span className="text-2xl font-bold tabular-nums">
-                    {totalVisitors.toLocaleString()}
+                    {totalValue.toFixed(2)} RON
                   </span>
                   <span className="text-xs text-muted-foreground">
-                    Total Visitors
+                    Total Cheltuieli
                   </span>
                 </>
               )}
@@ -135,11 +152,14 @@ export function ChartPieLabel() {
 
       <CardFooter className="flex-col gap-2 text-sm text-center">
         <div className="flex items-center justify-center gap-2 font-medium leading-none">
-          You spent <span className="font-bold text-foreground">x money</span>
+          Ai cheltuit{" "}
+          <span className="font-bold text-foreground">
+            {totalValue.toFixed(2)} RON
+          </span>
           <TrendingUp className="h-4 w-4 text-green-500" />
         </div>
         <div className="text-muted-foreground leading-none">
-          Showing total visitors for the last 6 months
+          Afișează cheltuielile totale agregate pe categorie
         </div>
       </CardFooter>
     </Card>

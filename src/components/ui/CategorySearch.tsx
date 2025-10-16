@@ -13,12 +13,15 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-const CATEGORIES = [
+// LISTA ACTUALIZATĂ pentru a se potrivi cu numele categoriilor financiare
+const FINANCIAL_CATEGORIES = [
   { value: "all", label: "Toate Categoriile" },
-  { value: "transactions", label: "Tranzacții" },
-  { value: "reports", label: "Rapoarte" },
-  { value: "users", label: "Utilizatori" },
-  { value: "settings", label: "Setări" },
+  { value: "food", label: "Mâncare" },
+  { value: "transport", label: "Transport" },
+  { value: "bills", label: "Facturi" },
+  { value: "entertainment", label: "Divertisment" },
+  { value: "salary", label: "Salariu" },
+  { value: "other", label: "Altele" },
 ];
 
 interface CategorySearchProps {
@@ -32,7 +35,7 @@ export function CategorySearch({
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategoryValue, setSelectedCategoryValue] = useState("all");
 
-  const selectedCategoryLabel = CATEGORIES.find(
+  const selectedCategoryLabel = FINANCIAL_CATEGORIES.find(
     (c) => c.value === selectedCategoryValue
   )?.label;
 
@@ -42,6 +45,8 @@ export function CategorySearch({
 
   const handleCategoryChange = (categoryValue: string) => {
     setSelectedCategoryValue(categoryValue);
+    // Aplica filtrarea imediat după schimbarea categoriei
+    onSearch(searchTerm, categoryValue);
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -91,9 +96,9 @@ export function CategorySearch({
           </DropdownMenuTrigger>
 
           <DropdownMenuContent align="end" className="w-52">
-            <DropdownMenuLabel>Filtrează după</DropdownMenuLabel>
+            <DropdownMenuLabel>Filtrează după Categorie</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            {CATEGORIES.map((category) => (
+            {FINANCIAL_CATEGORIES.map((category) => (
               <DropdownMenuItem
                 key={category.value}
                 onClick={() => handleCategoryChange(category.value)}
